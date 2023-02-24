@@ -28,6 +28,11 @@ const randomId = new randomString.generate({
 // The database to use
 const dbName = "users";
 
+// test visibility
+app.get("/", async(req, res) => {
+  res.send("StitchLab is online")
+})
+
 // register
 app.post('/public/users', async (req, res) => {
 
