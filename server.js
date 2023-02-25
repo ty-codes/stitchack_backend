@@ -27,10 +27,8 @@ const randomId = new randomString.generate({
 
 // The database to use
 const dbName = "users";
-
-// test visibility
 app.get("/", async(req, res) => {
-  res.send("StitchLab is online")
+  res.send("StitchLab is online");
 })
 
 // register
@@ -100,10 +98,10 @@ app.post('/public/users', async (req, res) => {
 })
 
 // login
-app.delete('/deleteaccount/users/:id', async (req, res) => {
-  var { email, password } = req.body;
+app.put('/deleteaccount/users/:id', async (req, res) => {
+  var { username, password } = req.body;
   const tailor = req.params.id;
-  if (email === process.env.ADMIN_USERNAME && password === ADMIN_SECRET) {
+  if (username === process.env.ADMIN_USERNAME && password === ADMIN_SECRET) {
     try {
       await client.connect();
       const db = client.db(dbName);
@@ -118,6 +116,8 @@ app.delete('/deleteaccount/users/:id', async (req, res) => {
     } catch (err) {
       console.log(err)
     }
+  } else {
+    res.status(400).send({message: "Unauthorized."})
   }
 })
 
@@ -214,7 +214,7 @@ app.get('/users/:tailorId', async (req, res) => {
 })
 
 // add of customer
-app.post('/users/:tailorId/customer', async (req, res) => {
+app.post('/users/:tailorId/customers', async (req, res) => {
   const reqId = req.params.tailorId;
 
   const bearer = req?.headers?.authorization;
@@ -336,7 +336,6 @@ app.post('/users/:tailorId/measurements', async (req, res) => {
     const [, token] = bearer ? bearer.split(" ") : res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
       ;
     const payload = token ? jwt.verify(token, process.env.SECRET_KEY) : null;
-    // const reqBodyCompleted =  arr.every(item => obj.hasOwnProperty(item))
     const { cid, ...others } = req.body;
     if (!!payload && cid) {
       const decoded = jwtDecode(token);
@@ -604,7 +603,7 @@ app.get('/catalogue/:tailorId', async (req, res) => {
 })
 
 // delete catalogue
-app.delete('/catalogue/:tailorId', async (req, res) => {
+app.put('/catalogue/:tailorId', async (req, res) => {
   const reqId = req.params.tailorId;
 
   const bearer = req?.headers?.authorization;
@@ -627,7 +626,7 @@ app.delete('/catalogue/:tailorId', async (req, res) => {
             .then(async (response) => {
               if (response.catalogue) {
                 const deleted = await col.updateOne({ _id: ObjectId(tailor) }, { $pull: { catalogue: { id: id } } })
-                res.status(200).json({ data: deleted });
+                res.status(200).json(deleted);
               } else if ((!response.catalogue)) {
                 res.status(200).json({ data: "Does not exist in catalogue" });
               }
@@ -891,7 +890,7 @@ app.get('/outstanding-income/:tailorId', async (req, res) => {
 })
 
 // set status
-app.put('/status/:tailorId', async (req, res) => {
+app.put('/orders/status/:tailorId', async (req, res) => {
   const reqId = req.params.tailorId;
 
   const bearer = req?.headers?.authorization;
@@ -914,7 +913,7 @@ app.put('/status/:tailorId', async (req, res) => {
             .then(async (response) => {
               if (response.orders) {
                 const updated = await col.updateOne({ tailorId: tailor, "orders.id": id }, { $set: { "orders.$.status": newStatus } })
-                res.status(200).json({ data: updated });
+                res.status(200).json(updated);
               } else if ((!response.orders)) {
                 res.status(200).json({ data: "Does not exist in orders" });
               }
