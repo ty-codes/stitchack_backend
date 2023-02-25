@@ -1,0 +1,873 @@
+openapi: 3.0.0
+servers:
+  # Added by API Auto Mocking Plugin
+  - description: SwaggerHub API Auto Mocking
+    url: https://virtserver.swaggerhub.com/TITOADEOYE00/Stitchlab/1.0.0
+  - url: https://stitches-fpfr.onrender.com
+  - url: https:localhost:8000
+    
+info:
+  description: This is an API for StitchLab
+  version: "1.0.0"
+  title: StitchLab
+  contact:
+    email: you@your-company.com
+  license:
+    name: Apache 2.0
+    url: 'http://www.apache.org/licenses/LICENSE-2.0.html'
+tags:
+  - name: Public
+    description: Public user calls
+  - name: Users
+    description: Calls available to authenticated users
+  - name: Catalogue
+  - name: Income
+  - name: Orders
+  - name: Admin
+  - name: Measurements
+paths:
+  /public/users/:
+      post:
+        tags:
+          - Public
+        summary: register user
+        operationId: registerUser
+        requestBody:
+          description: user body.
+          required: true
+          content:
+            application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/registerUserBody'
+        responses:
+          '200':
+            description: acknowledged response
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/acknowledgedRegistration'
+          '400':
+            description: Email already exists"
+  /public/users/authenticate:
+      post:
+        tags:
+          - Public
+        summary: login user
+        operationId: loginUser
+        requestBody:
+          description: user body.
+          required: true
+          content:
+            application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/loginUserBody'
+        responses:
+          '200':
+            description: acknowledged response
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/loggedIn'
+          '400':
+            description: Incorrect data
+  /users/:userId:
+    get:
+      tags:
+        - Users
+      summary: gets user details
+      operationId: getUserDetails
+      parameters:
+        - in: query
+          name: userId
+          description: pass user Id as parameter
+          required: true
+          schema:
+            type: string
+       
+      responses:
+        '200':
+          description: user object
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/user'
+        '400':
+          description: Unauthorized access
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UnauthorizedMessage'
+  /users/:userId/customers:
+    get:
+      tags:
+        - Users
+      summary: gets customers
+      operationId: getCustomers
+      parameters:
+        - in: query
+          name: userId
+          description: pass user Id as parameter
+          required: true
+          schema:
+            type: string
+         
+      responses:
+        '200':
+          description: customer array
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/customer'
+        '400':
+          description: Unauthorized access. Invalid credentials
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UnauthorizedMessage'
+    post:
+        tags:
+          - Users
+        summary: add customer
+        operationId: addCustomer
+        parameters:
+          - in: query
+            name: userId
+            description: pass user Id as parameter
+            required: true
+            schema:
+              type: string
+        requestBody:
+          description: Details of customer. Required.
+          required: true
+          content:
+            application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/customerBody'
+        responses:
+          '200':
+            description: acknowledged response
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/acknowledgedCustomer'
+          '400':
+            description: Unauthorized access. Invalid credentials
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/UnauthorizedMessage'
+  /users/:userId/measurements:
+    get:
+      tags:
+        - Measurements
+      summary: gets customer measurements
+      operationId: getMeasurements
+      parameters:
+        - in: query
+          name: userId
+          description: pass user Id as parameter
+          required: true
+          schema:
+            type: string
+         
+      responses:
+        '200':
+          description: measurements
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/measurements'
+        '400':
+          description: Unauthorized access. Invalid credentials
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UnauthorizedMessage'
+    post:
+        tags:
+          - Measurements
+        summary: add customer measurements
+        operationId: addMeasurements
+        parameters:
+          - in: query
+            name: userId
+            description: pass user Id as parameter
+            required: true
+            schema:
+              type: string
+        requestBody:
+          description: customer measurements in cm. Required.
+          required: true
+          content:
+            application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/measurementBody'
+        responses:
+          '200':
+            description: acknowledged response
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/acknowledgedRegistration'
+          '400':
+            description: Unauthorized access. Invalid credentials
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/UnauthorizedMessage'
+    put:
+      tags:
+        - Measurements
+      summary: edit customer measurements
+      operationId: editMeasurements
+      parameters:
+        - in: query
+          name: userId
+          description: pass user Id as parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: customer measurements in cm
+        required: true
+        content:
+          application/json:
+              schema:
+                type: object
+                properties:
+                  cid:
+                    type: string
+                    example: f650ijeo9433ert0
+                  measurements:
+                    type: object
+                    example: {bust: 150, hips: 165, waist: 56}
+                      
+      responses:
+        '200':
+          description: acknowledged response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Updated successfully
+        '400':
+          description: Unauthorized access. Invalid credentials
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UnauthorizedMessage'
+  /catalogue/:userId:
+    get:
+        tags:
+          - Catalogue
+        summary: gets catalogue
+        operationId: getCatalogue
+        parameters:
+          - in: query
+            name: userId
+            description: pass user Id as parameter
+            required: true
+            schema:
+              type: string
+         
+        responses:
+          '200':
+            description: catalogue object
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/catalogue'
+          '400':
+            description: Unauthorized access
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/UnauthorizedMessage'
+    post:
+      tags:
+        - Catalogue
+      summary: add style to catalogue
+      operationId: addCatalogueUnit
+      parameters:
+        - in: query
+          name: userId
+          description: pass user Id as parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Catalogue fields
+        required: true
+        content:
+          application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/CatalogueBody'
+      responses:
+        '200':
+          description: acknowledged response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/acknowledgedCustomer'
+        '400':
+          description: Unauthorized access. Invalid credentials
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UnauthorizedMessage'
+    put:
+      tags:
+        - Catalogue
+      summary: delete style from catalogue
+      operationId: removeCatalogueUnit
+      parameters:
+        - in: query
+          name: userId
+          description: pass user Id as parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Catalogue id
+        required: true
+        content:
+          application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: f650ijeo9433ert0
+      responses:
+        '200':
+          description: acknowledged response
+          content:
+            application/json:
+              schema:
+                items:   
+                  $ref: '#/components/schemas/acknowledgedUpdate'
+        '400':
+          description: Unauthorized access. Invalid credentials
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UnauthorizedMessage'
+  /orders/:userId:
+    get:
+        tags:
+          - Orders
+        summary: gets orders
+        operationId: getOrders
+        parameters:
+          - in: query
+            name: userId
+            description: pass user Id as parameter
+            required: true
+            schema:
+              type: string
+         
+        responses:
+          '200':
+            description: orders array
+            content:
+              application/json:
+                schema:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/orders'
+          '400':
+            description: Unauthorized access
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/UnauthorizedMessage'
+    post:
+      tags:
+        - Orders
+      summary: add order to orders
+      operationId: addOrder
+      parameters:
+        - in: query
+          name: userId
+          description: pass user Id as parameter
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: Order fields
+        required: true
+        content:
+          application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/OrderBody'
+      responses:
+        '200':
+          description: acknowledged response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/acknowledgedUpdate'
+        '400':
+          description: Unauthorized access. Invalid credentials
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UnauthorizedMessage'
+  /total-income/:userId:
+    get:
+        tags:
+          - Income
+        summary: gets total income
+        operationId: getTotalIncome
+        parameters:
+          - in: query
+            name: userId
+            description: pass user Id as parameter
+            required: true
+            schema:
+              type: string
+        responses:
+          '200':
+            description: income
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/income'
+          '400':
+            description: Unauthorized access
+            content:
+              application/json:
+                schema:
+                    $ref: '#/components/schemas/UnauthorizedMessage'
+  /outstanding-income/:userId:
+    get:
+        tags:
+          - Income
+        summary: gets outstanding income
+        operationId: getOutstandingIncome
+        parameters:
+          - in: query
+            name: userId
+            description: pass user Id as parameter
+            required: true
+            schema:
+              type: string
+        responses:
+          '200':
+            description: income
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/income'
+          '400':
+            description: Unauthorized access
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/UnauthorizedMessage'
+  /orders/status/:userId:
+    put:
+        tags:
+          - Orders
+        summary: update status of order
+        operationId: updateStatus
+        parameters:
+          - in: query
+            name: userId
+            description: pass user Id as parameter
+            required: true
+            schema:
+              type: string
+        requestBody:
+          description: Order id, newStatus
+          required: true
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      example: f650ijeo9433ert0
+                    newStatus:
+                      type: string
+                      example: pending
+        responses:
+          '200':
+            description: acknowledged response
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/acknowledgedUpdate'
+          '400':
+            description: Unauthorized access. Invalid credentials
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/UnauthorizedMessage'
+  /deleteaccount/users/:userId:
+    put:
+        tags:
+          - Admin
+        summary: delete user
+        operationId: deleteUser
+        parameters:
+          - in: query
+            name: userId
+            description: pass user Id as parameter
+            required: true
+            schema:
+              type: string
+        requestBody:
+          description: Order id, newStatus
+          required: true
+          content:
+            application/json:
+                schema:
+                  type: object
+                  properties:
+                    username:
+                      type: string
+                      example: admin
+                    password:
+                      type: string
+                      example: 000defr3a
+        responses:
+          '200':
+            description: acknowledged response
+            content:
+              application/json:
+                schema:
+                  items:
+                     $ref: '#/components/schemas/acknowledgedUpdate'
+          '400':
+            description: Unauthorized access. Invalid credentials
+            content:
+              application/json:
+                schema:
+                  items:
+                    $ref: '#/components/schemas/UnauthorizedMessage'
+components:
+  schemas:
+    income:
+      properties:
+        total:
+          type: integer
+          example: 30000
+    measurements:
+      properties:
+        bust:
+          type: string
+          example: Johnson
+        hip:
+          type: string
+          example: Johnson
+        waist:
+          type: string
+          example: Johnson
+      description: customer measurements in cm
+    measurementBody:
+      properties:
+        cid:
+          type: string
+          format: uuid
+          example: d290f1ee6c544b0190e6d701
+        bust:
+          type: string
+          example: Johnson
+        hip:
+          type: string
+          example: Johnson
+        waist:
+          type: string
+          example: Johnson
+      description: customer measurements in cm
+    user:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d290f1ee6c544b0190e6d701
+        _id:
+          type: string
+          format: uuid
+          example: d290f1ee6c544b01
+        firstname:
+          type: string
+          example: Paul
+        lastname:
+          type: string
+          example: Johnson
+        email:
+          type: string
+          format: email
+          example: pauljohnson@gmail.com
+        isGoogle:
+          type: boolean
+          example: false
+        isFb:
+          type: boolean
+          example: false
+        status:
+          type: string
+          example: pending
+        dateCreated:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+        phoneNumber:
+          type: string
+          example: 1234567890
+      description: user details
+    registerUserBody:
+      type: object
+      properties:
+        secret:
+          type: string
+          example: password
+        firstname:
+          type: string
+          example: Paul
+        lastname:
+          type: string
+          example: Johnson
+        email:
+          type: string
+          format: email
+          example: pauljohnson@gmail.com
+        phoneNumber:
+          type: string
+          example: 1234567890
+    loginUserBody:
+      type: object
+      properties:
+        secret:
+          type: string
+          example: password
+        email:
+          type: string
+          format: email
+          example: pauljohnson@gmail.com
+    loggedIn:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          type: object
+          format: email
+          example:  {id: "1234re23ed", _id: "d290f1ee6c544b01", firstname: "paul", lastname: "johnson", email: "pauljohnson@gmail.com", isGoogle: false, isFb: false, status: "pending", dateCreated: "2016-08-29T09:12:33.001Z", phoneNumber: "00000000000"  }
+    acknowledgedRegistration:
+      type: object
+      properties:
+        insertedId:
+          type: string
+          format: uuid
+          example: d290f1ee6c544b01
+        acknowledged:
+          type: boolean
+          example: true
+    acknowledgedUpdate:
+      type: object
+      properties:
+        modifiedCount:
+          type: integer
+          example: 1
+        acknowledged:
+          type: boolean
+          example: true
+        upsertedCount:
+          type: integer
+          example: 0
+        matchedCount:
+          type: integer
+          example: 1
+        upsertedId:
+          type: string
+          example: null
+    customer:
+      type: object
+      properties:
+        cid:
+          type: string
+          format: uuid
+          example: d290f1ee6c544b0190e6d701
+        firstname:
+          type: string
+          example: Paul
+        lastname:
+          type: string
+          example: Johnson
+        email:
+          type: string
+          format: email
+          example: pauljohnson@gmail.com
+        gender:
+          type: string
+          example: male
+        address:
+          type: string
+          example: '4, victoria estate, ogba, lagos'
+        phoneNumber:
+          type: string
+          example: 1234567890
+      description: customer details
+    acknowledgedCustomer:
+      properties:
+        message:
+          type: string
+          example: Customer list has been updated
+    customerBody:
+      type: object
+      required:
+        - firstname
+      properties:
+        firstname:
+          type: string
+          example: Paul
+        lastname:
+          type: string
+          example: Johnson
+        email:
+          type: string
+          format: email
+          example: pauljohnson@gmail.com
+        gender:
+          type: string
+          example: male
+        address:
+          type: string
+          example: '4, victoria estate, ogba, lagos'
+        phoneNumber:
+          type: string
+          example: 1234567890
+    OrderBody:
+      type: object
+      properties:
+        cid:
+          type: string
+          format: uuid
+          example: d290f1ee6c544b0190e6d701
+        dateCreated:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+        dateDue:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'  
+        price:
+          type: string
+          example: 1000
+        status:
+          type: string
+          example: not started
+        style:
+          type: string
+          format: link
+          example: data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAIgAbQMBIgACEQEDEQH/xAAcAAADAAIDAQAAAAAAAAAAAAAAAQIDBwQFBgj/
+    orders:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d290f1ee6c544b01
+        cid:
+          type: string
+          format: uuid
+          example: d290f1ee6c544b0190e6d701
+        dateCreated:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'
+        dateDue:
+          type: string
+          format: date-time
+          example: '2016-08-29T09:12:33.001Z'  
+        price:
+          type: string
+          example: 1000
+        status:
+          type: string
+          example: not started
+        style:
+          type: string
+          format: link
+          example: data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAIgAbQMBIgACEQEDEQH/xAAcAAADAAIDAQAAAAAAAAAAAAAAAQIDBwQFBgj/
+      description: catalogue
+    catalogue:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: d290f1ee6c544b0190e6d701
+        style:
+          type: string
+          format: link
+          example: data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAIgAbQMBIgACEQEDEQH/xAAcAAADAAIDAQAAAAAAAAAAAAAAAQIDBwQFBgj/
+        fabric:
+          type: string
+          example: crepe
+        name:
+          type: string
+          example: crepe skirt
+      description: catalogue
+    CatalogueBody:
+      type: object
+      properties:
+        style:
+          type: string
+          format: link
+          example: data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wCEAAkGBwgHBgkIBwgKCgkLDRYPDQwMDRsUFRAWIB0iIiAdHx8kKDQsJCYxJx8fLT0tMTU3Ojo6Iys/RD84QzQ5OjcBCgoKDQwNGg8PGjclHyU3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3Nzc3N//AABEIAIgAbQMBIgACEQEDEQH/xAAcAAADAAIDAQAAAAAAAAAAAAAAAQIDBwQFBgj/
+        fabric:
+          type: string
+          example: crepe
+        name:
+          type: string
+          example: crepe skirt
+      description: customer details
+    UnauthorizedMessage:
+      type: object
+      properties:
+        message:
+          type: string
+          example: Unauthorized. Invalid credentials
