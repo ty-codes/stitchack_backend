@@ -134,7 +134,7 @@ app.post('/public/users/authenticate', async (req, res) => {
       const col = db.collection("users");
       var user = await col?.findOne({ email: email });
       if (user) {
-        const { secret: secrethash } = user;
+        const { secret: secrethash, ...others } = user;
         bcrypt.compare(secret, secrethash).then((response) => {
           if (response) {
             const payload = {
@@ -143,7 +143,7 @@ app.post('/public/users/authenticate', async (req, res) => {
             }
 
             const token = jwt.sign(payload, process.env.SECRET_KEY);
-            res.status(200).json({ token, user })
+            res.status(200).json({ token, user: others })
           }
           else {
             res.status(400).json({ message: "Invalid credentials" })
