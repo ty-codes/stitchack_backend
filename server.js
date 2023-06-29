@@ -9,9 +9,9 @@ const jwtDecode = require("jwt-decode");
 
 const app = express();
 
-app.use(bodyParser.json())
-app.use(bodyParser.urlencoded())
-app.use(cors())
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
+app.use(cors());
 var port = process.env.PORT || 8000;
 app.use(express.static(__dirname));
 
@@ -28,8 +28,9 @@ const randomId = new randomString.generate({
 // The database to use
 const dbName = "users";
 app.get("/", async(req, res) => {
-  res.send("StitchLab is online");
+  res.send("Stitchack is online");
 })
+
 
 // register
 app.post('/public/users', async (req, res) => {
@@ -97,7 +98,7 @@ app.post('/public/users', async (req, res) => {
   }
 })
 
-// login
+// delete account
 app.put('/deleteaccount/users/:id', async (req, res) => {
   var { username, password } = req.body;
   const tailor = req.params.id;
@@ -169,7 +170,6 @@ app.get('/users/:tailorId', async (req, res) => {
   const reqId = req.params.tailorId;
 
   const bearer = req?.headers?.authorization;
-
   if (bearer) {
     const [, token] = bearer ? bearer.split(" ") : res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
       ;
@@ -216,13 +216,14 @@ app.get('/users/:tailorId', async (req, res) => {
 // add of customer
 app.post('/users/:tailorId/customers', async (req, res) => {
   const reqId = req.params.tailorId;
-
   const bearer = req?.headers?.authorization;
 
   if (bearer) {
+
     const [, token] = bearer ? bearer.split(" ") : res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
       ;
     const payload = token ? jwt.verify(token, process.env.SECRET_KEY) : null;
+
     const { phoneNumber, gender, firstname, lastname, email, address } = req.body;
     if (!!payload && firstname && lastname && phoneNumber && email && address && gender) {
       const decoded = jwtDecode(token);
@@ -254,7 +255,7 @@ app.post('/users/:tailorId/customers', async (req, res) => {
             }
           })
           .catch(err => {
-            res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
+            res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials.", error: err })
           })
           : res.status(400).json({ message: "User does not exist" })
 
@@ -265,7 +266,7 @@ app.post('/users/:tailorId/customers', async (req, res) => {
 
 
     } else {
-      res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
+      res.status(400).json({ message: "Incomplete. Access is denied due to incorrect data." })
 
     }
   } else {
@@ -273,6 +274,17 @@ app.post('/users/:tailorId/customers', async (req, res) => {
   }
 
 })
+
+// // test add cus
+// app.post('/users/:tailorId/customers', async (req, res) => {
+//   const reqId = req.params.tailorId;
+//   console.log(req?.headers)
+
+//   const bearer = req?.headers?.authorization;
+//   console.log(res.body)
+
+// })
+
 
 // get list of customers
 app.get('/users/:tailorId/customers', async (req, res) => {
