@@ -1,5 +1,4 @@
 const express = require('express')
-const bodyParser = require('body-parser');
 const cors = require("cors");
 require("dotenv").config();
 const randomString = require("randomized-string");
@@ -7,13 +6,23 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const jwtDecode = require("jwt-decode");
 
+// controllers
+const { 
+  control, register, 
+  login, details,
+  customers, addCustomer,
+  avatar, customersToday
+} = require("./controllers");
+
+
 const app = express();
 
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cors());
 var port = process.env.PORT || 8000;
 app.use(express.static(__dirname));
+
 
 
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
@@ -27,76 +36,25 @@ const randomId = new randomString.generate({
 
 // The database to use
 const dbName = "users";
-app.get("/", async(req, res) => {
-  res.send("Stitchack is online");
-})
-
-
+app.get("/", async (req, res) => control(res));
 // register
-app.post('/public/users', async (req, res) => {
+app.post('/public/users', async (req, res) => register(req, res, client, dbName));
+// login
+app.post('/public/users/authenticate', async (req, res) => login(req, res, client, dbName));
+// authenticated
+// user details
+app.get('/users/:tailorId', async (req, res) => details(req, res, client, dbName, ObjectId));
+// get list of customers
+app.get('/users/:tailorId/customers', async (req, res) => customers(req, res, client, dbName, ObjectId));
+// add of customer
+app.post('/users/:tailorId/customers', async (req, res) => addCustomer(req, res, client, ObjectId, dbName ));
+// upload user avatar
+app.post('/users/:tailorId/upload-avatar', async (req, res) => avatar(req, res, client, dbName, ObjectId))
+// get today's list of added customers
+app.get('/users/:tailorId/customers/today', async (req, res) => customers(req, res, client, dbName, ObjectId));
 
-  const tailorPlaceholder = {
-    email: "titoadeoye@gmail.com",
-    firstname: "bolatito",
-    lastname: "adeoye",
-    secret: "bolinco123",
-    phoneNumber: "00000000000"
-  }
 
-  const { email, firstname, lastname, secret, phoneNumber } = req.body;
 
-  if (email && firstname && lastname && secret && phoneNumber) {
-    var randomId = randomString.generate({
-      charset: "alphanumeric",
-      length: 24,
-    });
-
-    var saltRounds = email.length;
-
-    var hash = await bcrypt.hash(secret, saltRounds);
-    try {
-      await client.connect();
-      const db = client.db(dbName);
-      const col = db.collection("users");
-      var user = await col?.findOne({ email: email })
-
-      if (!user) {
-        // Construct a document                                                                                                                                                              
-        let newDocument = hash && {
-          "id": randomId,
-          "isGoogle": secret ? false : true,
-          "isFb": secret ? false : true,
-          "status": "pending",
-          "dateCreated": new Date(),
-          email: email,
-          firstname: firstname,
-          lastname: lastname,
-          secret: hash,
-          phoneNumber: phoneNumber,
-        }
-        // res.send(newDocument)
-        // Insert a single document, wait for promise so we can read it back
-
-        const p = await col.insertOne(newDocument);
-
-        res.status(200).send(p)
-      } else {
-        res.status(400).send({ message: "Email already exists" })
-      }
-
-    } catch (err) {
-      console.log(err);
-    }
-
-    finally {
-      // await client.close();
-    }
-
-  }
-  else {
-    res.status(400).json({ message: "Incorrect data" })
-  }
-})
 
 // delete account
 app.put('/deleteaccount/users/:id', async (req, res) => {
@@ -118,162 +76,10 @@ app.put('/deleteaccount/users/:id', async (req, res) => {
       console.log(err)
     }
   } else {
-    res.status(400).send({message: "Unauthorized."})
+    res.status(400).send({ message: "Unauthorized." })
   }
 })
 
-// login
-app.post('/public/users/authenticate', async (req, res) => {
-  const { email, secret } = req.body;
-  if (email && secret) {
-    var saltRounds = email.length;
-
-    var hash = await bcrypt.hash(secret, saltRounds);
-    try {
-      await client.connect();
-      const db = client.db(dbName);
-      const col = db.collection("users");
-      var user = await col?.findOne({ email: email });
-      if (user) {
-        const { secret: secrethash, ...others } = user;
-        bcrypt.compare(secret, secrethash).then((response) => {
-          if (response) {
-            const payload = {
-              sub: user?._id?.toString(),
-              iat: new Date().getTime()
-            }
-
-            const token = jwt.sign(payload, process.env.SECRET_KEY);
-            res.status(200).json({ token, user: others })
-          }
-          else {
-            res.status(400).json({ message: "Invalid credentials" })
-          }
-        })
-      } else {
-        res.status(400).send({ message: "Email doesn't exist" })
-      }
-
-    } catch (err) {
-      console.log(err)
-    }
-  } else {
-    res.status(400).json({ message: "Incorrect data" })
-  }
-})
-
-
-// authenticated
-
-// get user details
-app.get('/users/:tailorId', async (req, res) => {
-  const reqId = req.params.tailorId;
-
-  const bearer = req?.headers?.authorization;
-  if (bearer) {
-    const [, token] = bearer ? bearer.split(" ") : res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-      ;
-    const payload = token ? jwt.verify(token, process.env.SECRET_KEY) : null;
-    if (!!payload) {
-      const decoded = jwtDecode(token);
-      const tailor = reqId === decoded.sub ? decoded.sub : null;
-
-      try {
-        await client.connect();
-        const db = client.db(dbName);
-        const col = db.collection("users");
-
-        tailor ?
-          col?.findOne({ _id: ObjectId(tailor) })
-            .then(async (response) => {
-              if (response) {
-                res.status(200).json({ data: response });
-              } else if ((!response)) {
-                res.status(200).json({ data: [] });
-              }
-            })
-            .catch(err => {
-              res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-            })
-          : res.status(400).json({ message: "User does not exist" })
-
-      } catch (err) {
-        res.status(400).json({ message: "Something went wrong" })
-      }
-
-
-    } else {
-      res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-
-    }
-  } else {
-    res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-
-  }
-
-})
-
-// add of customer
-app.post('/users/:tailorId/customers', async (req, res) => {
-  const reqId = req.params.tailorId;
-  const bearer = req?.headers?.authorization;
-
-  if (bearer) {
-
-    const [, token] = bearer ? bearer.split(" ") : res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-      ;
-    const payload = token ? jwt.verify(token, process.env.SECRET_KEY) : null;
-
-    const { phoneNumber, gender, firstname, lastname, email, address } = req.body;
-    if (!!payload && firstname && lastname && phoneNumber && email && address && gender) {
-      const decoded = jwtDecode(token);
-      const tailor = reqId === decoded.sub ? decoded.sub : null;
-      const customer = {
-        cid: ObjectId().toString(),
-        ...req.body
-      }
-
-
-      try {
-        await client.connect();
-        const db = client.db(dbName);
-        const col = db.collection("users");
-        tailor ? col?.findOne({ _id: ObjectId(tailor) })
-          .then(async (response) => {
-            if (response && !response.customers) {
-              var customerArray = [];
-              customerArray.push(customer);
-              const updated = await col?.updateOne({ _id: ObjectId(tailor) }, { $set: { customers: customerArray } })
-              updated && res.status(200).send({ message: "Customer list has been updated" })
-            } else if (response && response.customers) {
-              var customerArray = response?.customers;
-              customerArray.push(customer);
-              const updated = await col?.updateOne({ _id: ObjectId(tailor) }, { $set: { customers: customerArray } })
-              updated && res.status(200).send({ message: "Customer list has been updated" })
-            } else if ((!response)) {
-              res.status(400).json({ message: "Account doesn't exist." });
-            }
-          })
-          .catch(err => {
-            res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials.", error: err })
-          })
-          : res.status(400).json({ message: "User does not exist" })
-
-
-      } catch (err) {
-        res.status(400).json({ message: "Something went wrong" })
-      }
-
-
-    } else {
-      res.status(400).json({ message: "Incomplete. Access is denied due to incorrect data." })
-
-    }
-  } else {
-    res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-  }
-
-})
 
 // // test add cus
 // app.post('/users/:tailorId/customers', async (req, res) => {
@@ -285,57 +91,18 @@ app.post('/users/:tailorId/customers', async (req, res) => {
 
 // })
 
-
-// get list of customers
-app.get('/users/:tailorId/customers', async (req, res) => {
-  const reqId = req.params.tailorId;
-
-  const bearer = req?.headers?.authorization;
-
-  if (bearer) {
-    const [, token] = bearer ? bearer.split(" ") : res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-      ;
-    const payload = token ? jwt.verify(token, process.env.SECRET_KEY) : null;
-    if (!!payload) {
-      const decoded = jwtDecode(token);
-      const tailor = reqId === decoded.sub ? decoded.sub : null;
-
-      try {
-        await client.connect();
-        const db = client.db(dbName);
-        const col = db.collection("users");
-
-        tailor ?
-          col?.findOne({ _id: ObjectId(tailor) })
-            .then(async (response) => {
-              if (response.customers) {
-                res.status(200).json({ data: response.customers });
-              } else if ((!response.customers)) {
-                res.status(200).json({ data: [] });
-              }
-            })
-            .catch(err => {
-              res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-            })
-          : res.status(400).json({ message: "User does not exist" })
-
-      } catch (err) {
-        res.status(400).json({ message: "Something went wrong" })
-      }
-
-
-    } else {
-      res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-
-    }
-  } else {
-    res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-
-  }
-
-})
-
 // delete customer
+
+
+
+
+
+
+
+
+
+
+
 
 
 // add customer measurement
@@ -692,8 +459,8 @@ app.post('/orders/:tailorId', async (req, res) => {
         const order = { cid, dateCreated, dateDue, price, status, style };
         tailor ? col?.findOne({ tailorId: tailor })
           .then(async (response) => {
-            
-            var orderDocument = {id: randomId, ...order};
+
+            var orderDocument = { id: randomId, ...order };
             if (!response) {
               const p = await col.insertOne({ tailorId: tailor, orders: [] });
               var orderArray = [];
@@ -814,7 +581,7 @@ app.get('/total-income/:tailorId', async (req, res) => {
                 const totalRevenue = completedOrders && completedOrders.reduce((acc, object) => {
                   return acc + Number(object.price);
                 }, 0);
-                
+
                 res.status(200).json({ total: totalRevenue });
               } else if ((response && !response?.orders)) {
                 res.status(200).json({ data: [] });
@@ -823,7 +590,7 @@ app.get('/total-income/:tailorId', async (req, res) => {
               }
             })
             .catch(err => {
-              res.status(401).json({ message: "tUnauthorized. Access is denied due to invalid credentials." })
+              res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
             })
           : res.status(200).json({ data: [], message: "You do not have any orders" })
 
@@ -867,12 +634,12 @@ app.get('/outstanding-income/:tailorId', async (req, res) => {
             .then(async (response) => {
               if (response && response?.orders) {
                 const outstandingOrders = response.orders.filter(order => {
-                  return order.status === "pending" || order.status==="not started";
+                  return order.status === "pending" || order.status === "not started";
                 });
                 const totalOutstandingRevenue = outstandingOrders && outstandingOrders.reduce((acc, object) => {
                   return acc + Number(object.price);
                 }, 0);
-                
+
                 res.status(200).json({ total: totalOutstandingRevenue });
               } else if ((response && !response?.orders)) {
                 res.status(200).json({ data: [] });
