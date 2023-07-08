@@ -18,19 +18,14 @@ const customers = async (req, res, client, dbName, ObjectId) => {
             try {
                 await client.connect();
                 const db = client.db(dbName);
-                const col = db.collection("users");
+                const col = db.collection("customers");
 
                 tailor ?
-                    col?.findOne({ _id: ObjectId(tailor) })
+                    col?.findOne({ id: ObjectId(tailor) })
+
                         .then(async (response) => {
-                            if (response.customers) {
-                                res.status(200).json({ data: response.customers });
-                            } else if ((!response.customers)) {
-                                res.status(200).json({ data: [] });
-                            }
-                        })
-                        .catch(err => {
-                            res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
+                            const customers = response.customers ? response.customers : [];
+                            res.status(200).json({ data: customers });
                         })
                     : res.status(400).json({ message: "User does not exist" })
 

@@ -51,7 +51,7 @@ app.post('/users/:tailorId/customers', async (req, res) => addCustomer(req, res,
 // upload user avatar
 app.post('/users/:tailorId/upload-avatar', async (req, res) => avatar(req, res, client, dbName, ObjectId))
 // get today's list of added customers
-app.get('/users/:tailorId/customers/today', async (req, res) => customers(req, res, client, dbName, ObjectId));
+app.get('/users/:tailorId/customers/today', async (req, res) => customersToday(req, res, client, dbName, ObjectId));
 
 
 
