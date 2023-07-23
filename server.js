@@ -11,7 +11,8 @@ const {
   control, register, 
   login, details,
   customers, addCustomer,
-  avatar, customersToday
+  avatar, customersToday,
+  editMeasurements
 } = require("./controllers");
 
 
@@ -48,6 +49,8 @@ app.get('/users/:tailorId', async (req, res) => details(req, res, client, dbName
 app.get('/users/:tailorId/customers', async (req, res) => customers(req, res, client, dbName, ObjectId));
 // add of customer
 app.post('/users/:tailorId/customers', async (req, res) => addCustomer(req, res, client, ObjectId, dbName ));
+// edit measurements
+app.put('/users/:tailorId/customer/edit', async (req, res) => editMeasurements(req, res, client, ObjectId, dbName ));
 // upload user avatar
 app.post('/users/:tailorId/upload-avatar', async (req, res) => avatar(req, res, client, dbName, ObjectId))
 // get today's list of added customers
@@ -105,66 +108,6 @@ app.put('/deleteaccount/users/:id', async (req, res) => {
 
 
 
-// add customer measurement
-app.post('/users/:tailorId/measurements', async (req, res) => {
-  const reqId = req.params.tailorId;
-
-  const bearer = req?.headers?.authorization;
-
-  if (bearer) {
-    const [, token] = bearer ? bearer.split(" ") : res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-      ;
-    const payload = token ? jwt.verify(token, process.env.SECRET_KEY) : null;
-    const { cid, ...others } = req.body;
-    if (!!payload && cid) {
-      const decoded = jwtDecode(token);
-      const tailor = reqId === decoded.sub ? decoded.sub : null;
-
-      try {
-        await client.connect();
-        const db = client.db(dbName);
-        const col = db.collection("users");
-        const measurement = { ...others }
-        tailor ? col?.findOne({ _id: ObjectId(tailor) })
-          .then(async (response) => {
-            const cidAavailable = await db?.collection("measurements")?.findOne({ cid: cid });
-            if (cidAavailable) {
-              const updated = await db?.collection("measurements")?.insertOne({ cid: cid, measurements: measurement });
-
-              res.status(200).send({ data: updated })
-            } else {
-              res.status(500).send({ messge: "Could not add data" })
-            }
-            // !cidAavailable && await db?.collection("measurements")?.insertOne({ cid: cid, measurements: measurement})
-            // : await db?.collection("measurements")?.findOneAndUpdate({cid: cid}, {measurements: measurement})
-            // if(cidAavailable) {
-            //                 // : await db?.collection("measurements")?.findOneAndUpdate({cid: cid}, {measurements: measurement})
-            // } else {
-            //   await db?.collection("measurements")?.insertOne({ cid: cid, measurements: measurement})
-            // }
-          })
-          .catch(err => {
-            res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials.", error: err })
-          })
-          : res.status(400).json({ message: "User does not exist" })
-
-
-      } catch (err) {
-        res.status(400).json({ message: "Something went wrong" })
-      }
-
-
-    } else {
-      res.status(401).json({ message: "paylodUnauthorized. Access is denied due to invalid credentials." })
-
-    }
-  } else {
-    res.status(401).json({ message: "bearerUnauthorized. Access is denied due to invalid credentials." })
-
-  }
-
-})
-
 // edit customer measurement
 app.put('/users/:tailorId/measurements', async (req, res) => {
   const reqId = req.params.tailorId;
@@ -217,52 +160,6 @@ app.put('/users/:tailorId/measurements', async (req, res) => {
     }
   } else {
     res.status(401).json({ message: "bearerUnauthorized. Access is denied due to invalid credentials." })
-
-  }
-
-})
-
-// get customer measurements
-app.get('/users/:tailorId/measurements/:customerId', async (req, res) => {
-  const reqId = req.params.tailorId;
-  const cid = req.params.customerId;
-
-  const bearer = req?.headers?.authorization;
-
-  if (bearer) {
-    const [, token] = bearer ? bearer.split(" ") : res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-      ;
-    const payload = token ? jwt.verify(token, process.env.SECRET_KEY) : null;
-    if (!!payload && cid) {
-      const decoded = jwtDecode(token);
-      const tailor = reqId === decoded.sub ? decoded.sub : null;
-
-      try {
-        await client.connect();
-        const db = client.db(dbName);
-        const col = db.collection("users");
-        tailor ? col?.findOne({ _id: ObjectId(tailor) })
-          .then(async (response) => {
-            const customer = await db?.collection("measurements")?.findOne({ cid: cid });
-            res.status(200).send({ data: customer.measurements || [] })
-          })
-          .catch(err => {
-            res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials.", error: err })
-          })
-          : res.status(400).json({ message: "User does not exist" })
-
-
-      } catch (err) {
-        res.status(400).json({ message: "Something went wrong" })
-      }
-
-
-    } else {
-      res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
-
-    }
-  } else {
-    res.status(401).json({ message: "Unauthorized. Access is denied due to invalid credentials." })
 
   }
 
