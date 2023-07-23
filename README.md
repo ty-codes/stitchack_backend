@@ -30,6 +30,7 @@ Tailors can:
 - Manage orders 🟡
 - View performance metrics 🟢
 - Add catalogue 🔴
+- Fun quotes and greeting on dashboard🔴
 
 # Version 2.0 🤩🤩
 - Messaging with potential clients
