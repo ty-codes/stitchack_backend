@@ -26,7 +26,7 @@ Tailors can:
 - Delete customers🟡
 - Add measurements 🟢
 - View measurements 🟢
-- Edit measurements 🟡
+- Edit measurements 🟢
 - Manage orders 🟡
 - View performance metrics 🟢
 - Add catalogue 🔴
