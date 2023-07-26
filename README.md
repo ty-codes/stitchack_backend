@@ -27,7 +27,8 @@ Tailors can:
 - Add measurements 🟢
 - View measurements 🟢
 - Edit measurements 🟢
-- Manage orders 🟡
+- Manage orders 🟢
+- View orders page with metrics and images 🟡
 - View performance metrics 🟢
 - Add catalogue 🔴
 - Fun quotes and greeting on dashboard🔴
