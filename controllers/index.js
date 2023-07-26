@@ -7,6 +7,8 @@ const { addCustomer } = require("./addCustomer");
 const { avatar } = require("./avatar")
 const { customersToday } = require("./customersToday");
 const { editMeasurements } = require("./editMeasurements");
+const { orders } = require("./orders");
+const { addOrder } = require("./addOrder");
 
 
 module.exports = {
@@ -18,5 +20,7 @@ module.exports = {
     addCustomer,
     avatar,
     customersToday,
-    editMeasurements
+    editMeasurements,
+    orders,
+    addOrder
 }
