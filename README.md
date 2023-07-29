@@ -13,7 +13,7 @@ codes, and also have access to the total revenue generated over a period of time
 # Status
 Still in progress
 
-# Status Color Codes
+# Status Color Codes 
 🟢 - _Done_
 🟡 - _In Progress_
 🔴 - _Not Started_
