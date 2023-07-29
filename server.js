@@ -13,7 +13,8 @@ const {
   customers, addCustomer,
   avatar, customersToday,
   editMeasurements,
-  orders, addOrder
+  orders, addOrder, 
+  ordersToday
 } = require("./controllers");
 
 
@@ -60,6 +61,8 @@ app.get('/users/:tailorId/customers/today', async (req, res) => customersToday(r
 app.get('/users/:tailorId/orders', async (req, res) => orders(req, res, client, dbName, ObjectId));
 // add order
 app.post('/users/:tailorId/orders', async (req, res) => addOrder(req, res, client, ObjectId, dbName ));
+// get today's list of added orders
+app.get('/users/:tailorId/orders/today', async (req, res) => ordersToday(req, res, client, dbName, ObjectId));
 
 
 
