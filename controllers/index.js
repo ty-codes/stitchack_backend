@@ -9,6 +9,7 @@ const { customersToday } = require("./customersToday");
 const { editMeasurements } = require("./editMeasurements");
 const { orders } = require("./orders");
 const { addOrder } = require("./addOrder");
+const { ordersToday } = require("./ordersToday");
 
 
 module.exports = {
@@ -22,5 +23,6 @@ module.exports = {
     customersToday,
     editMeasurements,
     orders,
-    addOrder
+    addOrder,
+    ordersToday
 }
