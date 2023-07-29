@@ -21,9 +21,13 @@ const login = async (req, res, client, dbName) => {
                             sub: user?._id?.toString(),
                             iat: new Date().getTime()
                         }
-
-                        const token = jwt.sign(payload, process.env.SECRET_KEY);
-                        res.status(200).json({ token, user: others })
+                        try {
+                            const token = jwt.sign(payload, process.env.SECRET_KEY);
+                            res.status(200).json({ token, user: others })
+                        } catch(err) {
+                            res.status(400).json({ message: err })
+                        }
+                        
                     }
                     else {
                         res.status(400).json({ message: "Invalid credentials" })
